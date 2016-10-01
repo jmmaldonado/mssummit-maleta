@@ -19,10 +19,28 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 server.post('/api/messages', connector.listen());
 
+
+
 //=========================================================
 // Bots Dialogs
 //=========================================================
 
 bot.dialog('/', function (session) {
-    session.send("Hello World");
+    if (!session.conversationStep | session.conversationStep == 0) {
+        console.debug("conversationStep: " + session.conversationStep);
+        session.send("Hello World");
+        session.conversationStep = 1;
+        console.debug("conversationStep: " + session.conversationStep);
+    }
+    else {
+        session.beginDialog('/1');
+    }
+    
+});
+
+
+bot.dialog('/1', function(Session) {
+    console.debug("conversationStep: " + session.conversationStep);
+    session.send("Primer step");
+    console.debug("conversationStep: " + session.conversationStep);
 });
