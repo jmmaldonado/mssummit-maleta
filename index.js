@@ -31,6 +31,7 @@ bot.use(builder.Middleware.dialogVersion({ version: 1.0, resetCommand: /^reset/i
 
 bot.dialog('/', [
     function (session) {
+        /*
         // Send a greeting and show help.
         var card = new builder.HeroCard(session)
             .title("Microsoft Bot Framework")
@@ -41,7 +42,8 @@ bot.dialog('/', [
         var msg = new builder.Message(session).attachments([card]);
         session.send(msg);
         session.send("Hi... I'm the Microsoft Bot Framework demo bot for Facebook. I can show you everything you can use our Bot Builder SDK to do on Facebook.");
-        session.beginDialog('/help');
+        */
+        session.beginDialog('/principal');
     },
     function (session, results) {
         // Display menu
