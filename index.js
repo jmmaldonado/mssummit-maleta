@@ -28,22 +28,17 @@ bot.use(builder.Middleware.dialogVersion({ version: 1.0, resetCommand: /^reset/i
 // Bots Dialogs
 //=========================================================
 
+var debug = false;
 
 bot.dialog('/', [
     function (session) {
-        /*
-        // Send a greeting and show help.
-        var card = new builder.HeroCard(session)
-            .title("Microsoft Bot Framework")
-            .text("Your bots - wherever your users are talking.")
-            .images([
-                 builder.CardImage.create(session, "http://docs.botframework.com/images/demo_bot_image.png")
-            ]);
-        var msg = new builder.Message(session).attachments([card]);
-        session.send(msg);
-        session.send("Hi... I'm the Microsoft Bot Framework demo bot for Facebook. I can show you everything you can use our Bot Builder SDK to do on Facebook.");
-        */
-        session.beginDialog('/principal');
+        
+        if (debug) {
+            session.beginDialog('/help');
+        }
+        else {
+            session.replaceDialog('/principal');    
+        }        
     },
     function (session, results) {
         // Display menu
@@ -51,20 +46,20 @@ bot.dialog('/', [
     },
     function (session, results) {
         // Always say goodbye
-        session.send("Ok... See you later!");
+        session.send("Estoy a tu disposición para cualquier cosa que necesites. ¡Disfruta del día!");
     }
 ]);
 
 
 bot.dialog('/help', [
     function (session) {
-        session.endDialog("Global commands that are available anytime:\n\n* menu - Exits a demo and returns to the menu.\n* goodbye - End this conversation.\n* help - Displays these commands.");
+        session.endDialog("Estoy en modo debug!!");
     }
 ]);
 
 bot.dialog('/menu', [
     function (session) {
-        builder.Prompts.choice(session, "What demo would you like to run?", "principal|test|(quit)");
+        builder.Prompts.choice(session, "Qué diálogo quieres seguir?", "principal|test|(quit)");
     },
     function (session, results) {
         if (results.response && results.response.entity != '(quit)') {
@@ -86,43 +81,89 @@ bot.dialog('/menu', [
 
 bot.dialog('/principal', [
     
+    //Hola
     function (session) {
+        if (debug) {
+            session.send("Estoy en modo debug!!");
+            session.send("Puedes volver al comienzo del dialogo diciendo: hola ");
+        }
         builder.Prompts.text(session, "Hola Gisela, ¿Cómo estás?");
     },
     
-    
+    //Pues la verdad es que estoy algo nerviosa.
     function (session, results) {
-        builder.Prompts.text(session, "¡Vaya! ¿En que te puedo ayudar?");
+        builder.Prompts.text(session, "¡Vaya, lo lamento! ¿En qué puedo ayudarte?");
     },
     
-    
+    //Vengo de un viaje y han perdido mi maleta.
     function (session, results) {
-        builder.Prompts.text(session, "¿De tu último vuelo a Seattle MS2313?");
+        builder.Prompts.choice(session, "¿De tu último vuelo a Seattle MS2313?", "si|no");
     },
     
-    
+    // Si, ese es.
     function (session, results) {
-        session.send("No te preocupes, voy a localizarla por ti");
-        sleep(5);
-        session.send("La he encontrado y está de camino al punto de entrega que seleccionaste");
+        session.send("No te preocupes, voy a tratar de localizar tu equipaje, dame unos instantes por favor");
+        
+        setTimeout( function() { 
+            
+            session.send("La he encontrado y está de camino al punto de entrega que seleccionaste"); 
+            var msg = new builder.Message(session)
+            .attachments([{
+                contentType: "image/jpeg",
+                contentUrl: "http://botmaletajmm.azurewebsites.net/initialMap.png"
+            }]);
+            session.send(msg);
+            builder.Prompts.text(session, "<b>Origen: </b>Madrid Barajas - Terminal 4<br/><b>Destino: </b>Palacio de congresos de Madrid. Paseo de la Castellana, 99, 28046 Madrid<br/><b>Tiempo estimado de llegada: </b>: 25 minutos");
+            
+        }, 10000);        
+    },
+    
+    //Ha debido haber algún error, no estoy en ese palacio de congresos. ¿Es posible cambiar la dirección de entrega?
+    function (session, results) {
+        
+        session.send("El equipaje todavía está en <b>reparto</b>, creo que podemos hacer algo");
+        builder.Prompts.choice(session, "¿Prefieres darme una nueva dirección o tu localización actual?", "dirección|localización");
+        
+    },
+    
+    //Selecciona ubicación
+    function (session, results) {
+        builder.Prompts.text(session, "Genial, si me envías tu ubicación la compartiré con el repartidor");
+    },
+    
+    //Compartir coordenadas
+    function (session, result) {
+        builder.Prompts.text(session, "De acuerdo, te he localizado en el Palacio Municipal de Congresos. ¿Algún dato adicional?");
+    },
+    
+    //No, eso es todo
+    function (session, results) {
         var msg = new builder.Message(session)
-            .attachments([
-                new builder.ReceiptCard(session)
-                    .title("Recipient's Name")
-                    .items([
-                        builder.ReceiptItem.create(session, "$22.00", "EMP Museum"),
-                        builder.ReceiptItem.create(session, "$22.00", "Space Needle")
-                    ])
-                    .facts([
-                        builder.Fact.create(session, "1234567898", "Order Number"),
-                        builder.Fact.create(session, "VISA 4076", "Payment Method"),
-                        builder.Fact.create(session, "WILLCALL", "Delivery Method")
-                    ])
-                    .tax("$4.40")
-                    .total("$48.40")
-            ]);
-         session.endDialog(msg);
+            .attachments([{
+                contentType: "image/jpeg",
+                contentUrl: "http://botmaletajmm.azurewebsites.net/finalMap.png"
+            }]);
+        session.send(msg);
+        session.send("Dirección de entrega: Palacio municipal de congresos. Avenida Capital de España Madrid,  7  - 28042 - Madrid");
+        session.send("Persona de contacto: Gisela Torres");
+        builder.Prompts.choice(session, "¿Es correcto?", "si|no");
+    },
+    
+    //si
+    function (session, results) {
+        session.send("De acuerdo, ya he compartido el destino actualizado con el equipo de reparto");
+        session.send("El tiempo estimado de entrega según bing maps es de <b>12 minutos</b>");
+        session.send("Lamento mucho el incoveniente que te hemos ocasionado, en compensación nos gustaría ofrecerte un código de acceso para nuestra sala VIP de Madrid Barajas para tu próximo vuelo.");
+        var msg = new builder.Message(session)
+            .attachments([{
+                contentType: "image/jpeg",
+                contentUrl: "http://botmaletajmm.azurewebsites.net/qrCode.png"
+            }]);
+        session.send(msg);
+        session.endDialog("Estoy a tu disposición para cualquier cosa que necesites. ¡Disfruta del día!");
     }
+    
+    
 ]).reloadAction('reloadPrincipal', null, { matches: /^hola/i });
 
 
@@ -132,153 +173,15 @@ bot.dialog('/principal', [
 bot.dialog('/test', [
     
     function (session) {
-        session.send("You can send a receipts for facebook using Bot Builders ReceiptCard...");
-        var msg = new builder.Message(session)
-            .attachments([
-                new builder.ReceiptCard(session)
-                    .title("Recipient's Name")
-                    .items([
-                        builder.ReceiptItem.create(session, "$22.00", "EMP Museum").image(builder.CardImage.create(session, "https://upload.wikimedia.org/wikipedia/commons/a/a0/Night_Exterior_EMP.jpg")),
-                        builder.ReceiptItem.create(session, "$22.00", "Space Needle").image(builder.CardImage.create(session, "https://upload.wikimedia.org/wikipedia/commons/7/7c/Seattlenighttimequeenanne.jpg"))
-                    ])
-                    .facts([
-                        builder.Fact.create(session, "1234567898", "Order Number"),
-                        builder.Fact.create(session, "VISA 4076", "Payment Method")
-                    ])
-                    .tax("$4.40")
-                    .total("$48.40")
-            ]);
-        session.send(msg);
-
-        session.send("Or using facebooks native attachment schema...");
-        msg = new builder.Message(session)
-            .sourceEvent({
-                facebook: {
-                    attachment: {
-                        type: "template",
-                        payload: {
-                            template_type: "receipt",
-                            recipient_name: "Stephane Crozatier",
-                            order_number: "12345678902",
-                            currency: "USD",
-                            payment_method: "Visa 2345",        
-                            order_url: "http://petersapparel.parseapp.com/order?order_id=123456",
-                            timestamp: "1428444852", 
-                            elements: [
-                                {
-                                    title: "Classic White T-Shirt",
-                                    subtitle: "100% Soft and Luxurious Cotton",
-                                    quantity: 2,
-                                    price: 50,
-                                    currency: "USD",
-                                    image_url: "http://petersapparel.parseapp.com/img/whiteshirt.png"
-                                },
-                                {
-                                    title: "Classic Gray T-Shirt",
-                                    subtitle: "100% Soft and Luxurious Cotton",
-                                    quantity: 1,
-                                    price: 25,
-                                    currency: "USD",
-                                    image_url: "http://petersapparel.parseapp.com/img/grayshirt.png"
-                                }
-                            ],
-                            address: {
-                                street_1: "1 Hacker Way",
-                                street_2: "",
-                                city: "Menlo Park",
-                                postal_code: "94025",
-                                state: "CA",
-                                country: "US"
-                            },
-                            summary: {
-                                subtotal: 75.00,
-                                shipping_cost: 4.95,
-                                total_tax: 6.19,
-                                total_cost: 56.14
-                            },
-                            adjustments: [
-                                { name: "New Customer Discount", amount: 20 },
-                                { name: "$10 Off Coupon", amount: 10 }
-                            ]
-                        }
-                    }
-                }
-            });
-            
-            session.send("Or using facebooks native attachment schema...");
         
-            msg = new builder.Message(session)
-            .sourceEvent({
-                facebook: {
-                    attachment: {
-                        type: "template",
-                        payload: {
-                            template_type: "button",
-                            text: "Detalles de la maleta",
-                            
-                                    
-                                    buttons:[
-                                      {
-                                        "type":"web_url",
-                                        "url":"www.google.com",
-                                        "title":"Detalles",
-                                        "webview_height_ratio": "tall"
-                                      }          
-                                    ]
-                                 
-                        }
-                    }
-                }
-            });
-            session.endDialog(msg);
+        var msg = new builder.Message(session)
+            .attachments([{
+                contentType: "image/jpeg",
+                contentUrl: "http://botmaletajmm.azurewebsites.net/initialMap.png"
+            }]);
+        session.endDialog(msg);
+        
+        
     }
 ]);
 
-
-
-
-
-
-function sleep(seconds) {
-    var waitTill = new Date(new Date().getTime() + seconds * 1000);
-    while(waitTill > new Date()){}
-}
-
-
-/*
-bot.dialog('/startConversation', function(session) {
-    console.log("EO2");
-    session.send("Hello World");
-    continueConversation(session);
-    session.beginDialog('/secondStep');
-});
-
-
-bot.dialog('/secondStep', function(session) {
-    session.send("Primer step");
-    endConversation(session);
-});
-
-
-function getConversationStep(session) {
-    var conversationDialogs = [
-        "/startConversation",
-        "secondStep"
-    ];
-    
-    if (!session.privateConversationData.conversationStep)
-        return conversationDialogs[0];
-    else
-        return conversationDialogs[session.privateConversationData.conversationStep];  
-};
-
-function continueConversation(session) {
-    session.privateConversationData.conversationStep = session.privateConversationData.conversationStep + 1;
-}
-
-function endConversation(session) {
-    session.privateConversationData.conversationStep = 0;
-    session.endDialog();
-}
-
-*/
