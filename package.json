@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "botbuilder": "^3.2.3",
+    "jimp": "^0.2.27",
     "restify": "^4.1.1"
   }
 }

@@ -1,6 +1,15 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 
+
+
+var VIPCode = require("./vipcode");
+
+
+
+
+
+
 //=========================================================
 // Bot Setup
 //=========================================================
@@ -87,6 +96,35 @@ bot.dialog('/principal', [
             session.send("Estoy en modo debug!!");
             session.send("Puedes volver al comienzo del dialogo diciendo: hola ");
         }
+
+
+        var vipcodetext = {
+            title1: "ACCESO A SALA VIP:",
+            row1 : "Madrid - Barajas",
+            title2: "TITULAR DEL BILLETE:",
+            row2: "Gisela Torres",
+            title3: "VALIDO HASTA:",
+            row3: "5 de Diciembre de 2017"
+        }
+
+        VIPCode.create(null, function(err, filePath) {
+            if (err) {
+                console.error(err);
+            }
+            else {
+                console.log(filePath);
+                var msg = new builder.Message(session)
+                .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: "http://botmaletajmm.azurewebsites.net/" + filePath
+                }]);
+                session.send(msg);
+                }
+        });
+
+
+        
+
         builder.Prompts.text(session, "Hola Gisela, ¿Cómo estás?");
     },
     
